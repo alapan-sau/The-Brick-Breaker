@@ -271,6 +271,28 @@ class Game:
     def increase_score(self, num):
         self._score = self._score + num
 
+
+    def new_life(self):
+
+        for power_up in self._power_ups:
+            if(power_up != None and power_up.is_activated()):
+                if(0 < power_up.get_type() <= 2):
+                    power_up.deactivate(self._paddle)
+                elif(power_up.get_type() <= 4):
+                    for ball in self._balls:
+                        power_up.deactivate(ball)
+                elif(power_up.get_type() == 5):
+                    power_up.deactivate(self)
+
+
+        self._lives = self._lives - 1
+        if(self._lives == 0):
+            sys.exit()
+        self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
+        self._balls = []
+        self._balls.append(Ball([int(self._width/2)-1, self._height-2],[1,1],[0,0], [self._width,self._height], True))
+
+
     ############# RUN ################################
     def run(self):
         while 1:
@@ -291,6 +313,9 @@ class Game:
             for ball in self._balls:
                 if(ball.move()):
                     self._balls.remove(ball)
+
+                if(len(self._balls) == 0 ):
+                    self.new_life()
 
             self._screen.place_object(self._paddle)
 
