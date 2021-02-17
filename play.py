@@ -54,32 +54,32 @@ class Game:
 
                             [left+ size*2,top+4],[left+ size*3,top+4]
                     ]
-        self._power_frame = [   4, 4,
+        self._power_frame = [   2, 2,
 
-                                4, 4,
-                                4, 4,
+                                2, 2,
+                                2, 2,
 
-                                4, 4,
-                                4, 4,
-                                4, 4,
-
-                                4, 4,
-                                4, 4,
-
-                                4, 4,
-                        ]
-        self._brick_strength_frame = [
-                                1, 3,
-
-                                0, 3,
+                                2, 1,
+                                1, 2,
                                 2, 1,
 
-                                3, 3,
-                                0, 2,
+                                1, 2,
+                                2, 1,
+
+                                1, 2,
+                        ]
+        self._brick_strength_frame = [
                                 1, 1,
 
                                 1, 1,
-                                2, 3,
+                                1, 1,
+
+                                1, 1,
+                                0, 1,
+                                1, 1,
+
+                                1, 1,
+                                1, 1,
 
                                 -3, -3,
 
@@ -111,6 +111,8 @@ class Game:
                 self._bricks.append(Brick(self._frame[i],[size,1],[0,0],[self._width,self._height],self._brick_strength_frame[i],self._power_ups[i]))
             else:
                 self._bricks.append(UnBrick(self._frame[i],[size,1],[0,0],[self._width,self._height],100,self._power_ups[i]))
+
+    ############## KEYBOARD INTERRUPT ########################
 
     def handle_keyboard_interrupt(self):
         get = Get()
@@ -315,56 +317,72 @@ class Game:
 
                 brick.thru_ball_collision(self)
 
+    ################## UTILITY ####################
+
+    def place_items(self):
+        self._screen.place_object(self._paddle)
+
+        for ball in self._balls:
+            self._screen.place_object(ball)
+
+        for brick in self._bricks:
+            if(brick.is_visible()):
+                self._screen.place_object(brick)
+
+        for power_up in self._power_ups:
+            if(power_up != None and power_up.is_visible()):
+                self._screen.place_object(power_up)
+
+    def move_items(self):
+        for ball in self._balls:
+            if(ball.move()):
+                self._balls.remove(ball)
+            if(len(self._balls) == 0 ):
+                self.new_life()
+
+        for power_up in self._power_ups:
+            if(power_up != None and power_up.is_visible()):
+                power_up.move()
+
+    def handle_collisions(self):
+        for ball in self._balls:
+            self.handle_paddle_ball_collision(ball, self._paddle)
+
+        for brick in self._bricks:
+            for ball in self._balls:
+                self.handle_ball_brick_collision(ball,brick)
+
+        for power_up in self._power_ups:
+            if(power_up != None and power_up.is_visible()):
+                self.handle_paddle_power_up_collision(self._paddle,power_up)
+
+    def handle_power_up_timings(self):
+        for power_up in self._power_ups:
+            # if(power_up != None and power_up.is_visible()):
+                # self._screen.place_object(power_up)
+
+            if(power_up != None and power_up.is_activated()):
+                if(time.time() - power_up.get_time() > 5):
+                    if(0< power_up.get_type() <=2):
+                        power_up.deactivate(self._paddle)
+                    elif(power_up.get_type() <= 4):
+                        for ball in self._balls:
+                            power_up.deactivate(ball)
+                    elif(power_up.get_type() == 5):
+                        power_up.deactivate(self)
+
     ############# RUN ################################
     def run(self):
         while 1:
             self._screen.clean()
             self.handle_keyboard_interrupt()
             self._screen.reset_screen()
-            for ball in self._balls:
-                self.handle_paddle_ball_collision(ball, self._paddle)
-
-            for brick in self._bricks:
-                for ball in self._balls:
-                    self.handle_ball_brick_collision(ball,brick)
-
-            for power_up in self._power_ups:
-                if(power_up != None and power_up.is_visible()):
-                    self.handle_paddle_power_up_collision(self._paddle,power_up)
-
-            for ball in self._balls:
-                if(ball.move()):
-                    self._balls.remove(ball)
-
-                if(len(self._balls) == 0 ):
-                    self.new_life()
-
-            self._screen.place_object(self._paddle)
-
-            for ball in self._balls:
-                self._screen.place_object(ball)
-
-            for brick in self._bricks:
-                if(brick.is_visible()):
-                    self._screen.place_object(brick)
-
-            for power_up in self._power_ups:
-                if(power_up != None and power_up.is_visible()):
-                    power_up.move()
-                    self._screen.place_object(power_up)
-
-                if(power_up != None and power_up.is_activated()):
-                    if(time.time() - power_up.get_time() > 10):
-                        if(0< power_up.get_type() <=2):
-                            power_up.deactivate(self._paddle)
-                        elif(power_up.get_type() <= 4):
-                            for ball in self._balls:
-                                power_up.deactivate(ball)
-                        elif(power_up.get_type() ==5):
-                            power_up.deactivate(self)
-
+            self.handle_collisions()
+            self.move_items()
+            self.place_items()
+            self.handle_power_up_timings()
             self._screen.render_screen()
-            print("LIVES: ", self._lives, "TIME: ",int(time.time()-self._time), "SCORE: ", self._score)
+            print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score)
 
 
 

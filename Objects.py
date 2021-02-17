@@ -43,19 +43,13 @@ class Paddle(Item):
 ########## POWER UP functionalities ############
 
     def increase_size(self):
-        self._size[0] = 19
+        self._size[0] = self._size[0] + 2
         self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
         self._structure[0][0]='('
         self._structure[0][self._size[0]-1]=')'
 
     def decrease_size(self):
-        self._size[0] = 7
-        self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0]='('
-        self._structure[0][self._size[0]-1]=')'
-
-    def restore_size(self):
-        self._size[0] = 13
+        self._size[0] = self._size[0] - 2
         self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
         self._structure[0][0]='('
         self._structure[0][self._size[0]-1]=')'
@@ -252,12 +246,6 @@ class ExplodingBrick(Brick):
             game.explode_neighbour(self._pos, self._size)
 
 
-
-
-
-
-
-
 class Power_up(Item):
     def __init__(self,pos, size, speed, max_size, type):
         super().__init__(pos,size,speed,max_size)
@@ -307,7 +295,7 @@ class Expand_paddle(Power_up):
         self._time = time.time()
 
     def deactivate(self, paddle):
-        paddle.restore_size()
+        paddle.decrease_size()
         self._activated = 0
 
 
@@ -324,7 +312,7 @@ class Shrink_paddle(Power_up):
         self._time = time.time()
 
     def deactivate(self, paddle):
-        paddle.restore_size()
+        paddle.increase_size()
         self._activated = 0
 
 
