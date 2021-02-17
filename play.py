@@ -7,7 +7,7 @@ from colorama import Fore, Back, Style
 import random
 import time
 from screen import Screen
-from Objects import Multiply_ball, Paddle, Thru_ball, UnBrick
+from Objects import ExplodingBrick, Multiply_ball, Paddle, Thru_ball, UnBrick
 from Objects import Ball
 from Objects import Brick
 from Objects import Expand_paddle
@@ -81,7 +81,8 @@ class Game:
                                 1, 1,
                                 2, 3,
 
-                                1, 3
+                                -3, -3,
+
                             ]
 
         self._bricks = []
@@ -104,7 +105,9 @@ class Game:
 
 
         for i in range(0, len(self._frame)):
-            if(self._brick_strength_frame[i]):
+            if(self._brick_strength_frame[i]< 0):
+                self._bricks.append(ExplodingBrick(self._frame[i],[size,1],[0,0],[self._width,self._height],-self._brick_strength_frame[i],self._power_ups[i]))
+            elif(self._brick_strength_frame[i]):
                 self._bricks.append(Brick(self._frame[i],[size,1],[0,0],[self._width,self._height],self._brick_strength_frame[i],self._power_ups[i]))
             else:
                 self._bricks.append(UnBrick(self._frame[i],[size,1],[0,0],[self._width,self._height],100,self._power_ups[i]))
@@ -292,6 +295,25 @@ class Game:
         self._balls = []
         self._balls.append(Ball([int(self._width/2)-1, self._height-2],[1,1],[0,0], [self._width,self._height], True))
 
+    ################### BONUS ##############################
+
+    def explode_neighbour(self, pos, size):
+        for brick in self._bricks:
+            brick_pos,brick_size,brick_speed = brick.get_dimension()
+
+            if(not brick.is_visible()):
+                continue
+            elif(pos[0] == brick_pos[0]):
+                if(pos[1]+size[1] == brick_pos[1] or pos[1]-size[1] == brick_pos[1]):
+                    brick.thru_ball_collision(self)
+
+            elif(pos[1] == brick_pos[1]):
+                if(pos[0]+size[0] == brick_pos[0] or pos[0]-size[0] == brick_pos[0]):
+                    brick.thru_ball_collision(self)
+
+            elif((pos[0]+size[0] == brick_pos[0] or pos[0]-size[0] == brick_pos[0]) and (pos[1]+size[1] == brick_pos[1] or pos[1]-size[1] == brick_pos[1])):
+
+                brick.thru_ball_collision(self)
 
     ############# RUN ################################
     def run(self):

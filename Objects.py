@@ -181,6 +181,7 @@ class Brick(Item):
     def is_visible(self):
         return self._visible
 
+
     ###### POWER UP functionalities ############
     def thru_ball_collision(self,game):
         game.increase_score(self._strength)
@@ -214,6 +215,44 @@ class UnBrick(Brick):
         self._visible = 0
         if(self._power_up != None):
             self._power_up.make_visible()
+
+
+class ExplodingBrick(Brick):
+    def __init__(self,pos,size,speed,max_size,strength,power_up):
+        super().__init__(pos,size,speed,max_size,strength,power_up)
+        self._structure = np.array([['E' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0] = '|'
+        self._structure[0][self._size[0]-1] = '|'
+        self._strength = strength
+        self._visible = 1
+        self._power_up = power_up
+
+
+
+    ########### Both are overloaded #############
+
+    def ball_collision(self,game):
+        self._strength = self._strength -1
+        game.increase_score(1)
+        if(self._strength==0):
+            self._visible = 0
+            if(self._power_up != None):
+                self._power_up.make_visible()
+            game.explode_neighbour(self._pos, self._size)
+
+    ###### POWER UP functionalities ############
+    def thru_ball_collision(self,game):
+        print(1)
+        game.increase_score(self._strength)
+        self._strength = 0
+        if(self._strength==0):
+            self._visible = 0
+            if(self._power_up != None):
+                self._power_up.make_visible()
+            game.explode_neighbour(self._pos, self._size)
+
+
+
 
 
 
