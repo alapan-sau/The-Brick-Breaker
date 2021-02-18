@@ -1,9 +1,8 @@
 import os
 import numpy as np
-from colorama import init as cinit
-from colorama import Fore, Back, Style
 import random
 import time
+# cinit(autoreset=True)
 
 
 

@@ -1,10 +1,9 @@
 import os
 import numpy as np
-from colorama import init as cinit
-from colorama import Fore, Back, Style
 import random
 import time
 import sys
+from color import *
 
 
 class Item:
@@ -25,15 +24,15 @@ class Item:
 class Paddle(Item):
     def __init__(self,pos,size,speed,max_size):
         super().__init__(pos,size,speed,max_size)
-        self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0]='('
-        self._structure[0][self._size[0]-1]=')'
+        self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0]=fg.cyan+'('+reset
+        self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
 
     def move(self,ch):
         if(ch=='d'):
             self._pos[0] = self._pos[0]+2
             if(self._pos[0]+self._size[0] >= self._max_size[0]-1):
-                self._pos[0] = self._max_size[0] - self._size[0] - 2
+                self._pos[0] = self._max_size[0] - self._size[0] - 1
 
         elif(ch=='a'):
             self._pos[0] = self._pos[0]-2
@@ -44,20 +43,20 @@ class Paddle(Item):
 
     def increase_size(self):
         self._size[0] = self._size[0] + 2
-        self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0]='('
-        self._structure[0][self._size[0]-1]=')'
+        self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0]=fg.cyan+'('+reset
+        self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
 
     def decrease_size(self):
         self._size[0] = self._size[0] - 2
-        self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0]='('
-        self._structure[0][self._size[0]-1]=')'
+        self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0]=fg.cyan+'('+reset
+        self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
 
 class Ball(Item):
     def __init__(self,pos,size,speed,max_size,stick):
         super().__init__(pos,size,speed,max_size)
-        self._structure = np.array([['o']])
+        self._structure = np.array([[fg.yellow+'o'+reset]])
         self._stick = stick
         self._paddle_grab = False
         self._thru_ball = False
@@ -153,13 +152,33 @@ class Ball(Item):
     def is_thru(self):
         return self._thru_ball
 
+    def increase_speed(self):
+        if(not self._stick):
+            self._speed[0] = self._speed[0] * 2
+
+    def decrease_speed(self):
+        if(not self._stick):
+            if(self._speed[0]>=2 or self._speed[0]<=-2):
+                self._speed[0] = self._speed[0]/2
+
 class Brick(Item):
     def __init__(self,pos,size,speed,max_size,strength,power_up):
         super().__init__(pos,size,speed,max_size)
-        self._structure = np.array([['I' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0] = '|'
-        self._structure[0][self._size[0]-1] = '|'
         self._strength = strength
+
+        self._color = ''
+        if(self._strength == 3):
+            self._color = fg.red
+        elif(self._strength == 2):
+            self._color = fg.yellow
+        elif(self._strength == 1):
+            self._color = fg.green
+
+
+        self._structure = np.array([[ (self._color+'I'+reset )for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0] = self._color+'|'+reset
+        self._structure[0][self._size[0]-1] = self._color+'|'+reset
+
         self._visible = 1
         self._power_up = power_up
 
@@ -167,6 +186,18 @@ class Brick(Item):
     def ball_collision(self,game):
         self._strength = self._strength -1
         game.increase_score(1)
+
+        if(self._strength == 3):
+            self._color = fg.red
+        elif(self._strength == 2):
+            self._color = fg.yellow
+        elif(self._strength == 1):
+            self._color = fg.green
+
+        self._structure = np.array([[ (self._color+'I'+reset )for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0] = self._color+'|'+reset
+        self._structure[0][self._size[0]-1] = self._color+'|'+reset
+
         if(self._strength==0):
             self._visible = 0
             if(self._power_up != None):
@@ -190,10 +221,11 @@ class Brick(Item):
 class UnBrick(Brick):
     def __init__(self,pos,size,speed,max_size,strength,power_up):
         super().__init__(pos,size,speed,max_size,strength,power_up)
+        self._strength = strength
         self._structure = np.array([['U' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
         self._structure[0][0] = '|'
         self._structure[0][self._size[0]-1] = '|'
-        self._strength = strength
+
         self._visible = 1
         self._power_up = power_up
 
@@ -214,10 +246,20 @@ class UnBrick(Brick):
 class ExplodingBrick(Brick):
     def __init__(self,pos,size,speed,max_size,strength,power_up):
         super().__init__(pos,size,speed,max_size,strength,power_up)
-        self._structure = np.array([['E' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0] = '|'
-        self._structure[0][self._size[0]-1] = '|'
+
         self._strength = strength
+
+        if(self._strength == 3):
+            self._color = fg.red
+        elif(self._strength == 2):
+            self._color = fg.yellow
+        elif(self._strength == 1):
+            self._color = fg.green
+
+        self._structure = np.array([[self._color+'E'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0] = self._color+'|'+reset
+        self._structure[0][self._size[0]-1] = self._color+'|'+reset
+
         self._visible = 1
         self._power_up = power_up
 
@@ -228,6 +270,18 @@ class ExplodingBrick(Brick):
     def ball_collision(self,game):
         self._strength = self._strength -1
         game.increase_score(1)
+
+        if(self._strength == 3):
+            self._color = fg.red
+        elif(self._strength == 2):
+            self._color = fg.yellow
+        elif(self._strength == 1):
+            self._color = fg.green
+
+        self._structure = np.array([[self._color+'E' for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0] = self._color+'|'+reset
+        self._structure[0][self._size[0]-1] = self._color+'|'+reset
+
         if(self._strength==0):
             self._visible = 0
             if(self._power_up != None):
@@ -363,4 +417,20 @@ class Multiply_ball(Power_up):
 
     def deactivate(self,game):
         game.divide_ball(self._num_ball)
+        self._activated = 0
+
+class Fast_Ball(Power_up):
+    def __init__(self,pos, size, speed, max_size):
+        super().__init__(pos,size,speed,max_size,5)
+        self._structure = np.array([['F']])
+
+    def activate(self, ball):
+        self._visible = 0
+        ball.increase_speed()
+        self._activated = 1
+        self._time = time.time()
+
+
+    def deactivate(self,ball):
+        ball.decrease_speed()
         self._activated = 0

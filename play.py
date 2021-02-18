@@ -2,12 +2,10 @@ from numpy.lib.shape_base import expand_dims
 from input import input_to
 import os
 import numpy as np
-from colorama import init as cinit
-from colorama import Fore, Back, Style
 import random
 import time
 from screen import Screen
-from Objects import ExplodingBrick, Multiply_ball, Paddle, Thru_ball, UnBrick
+from Objects import ExplodingBrick, Fast_Ball, Multiply_ball, Paddle, Thru_ball, UnBrick
 from Objects import Ball
 from Objects import Brick
 from Objects import Expand_paddle
@@ -52,21 +50,44 @@ class Game:
                             [left+ size*1,top+3],[left+ size*2,top+3],
                             [left+ size*3,top+3],[left+ size*4,top+3],
 
-                            [left+ size*2,top+4],[left+ size*3,top+4]
+                            [left+ size*2,top+4],[left+ size*3,top+4],
+
+                            [left+ size*2,top+6],[left+ size*3,top+6],
+
+                            [left+ size*1,top+7],[left+ size*2,top+7],
+                            [left+ size*3,top+7],[left+ size*4,top+7],
+
+                            [left+ size*0,top+8],[left+ size*1,top+8],
+                            [left+ size*2,top+8],[left+ size*3,top+8],
+                            [left+ size*4,top+8],[left+ size*5,top+8],
+
+                            [left+ size*2,top+9],[left+ size*3,top+9]
+
                     ]
-        self._power_frame = [   2, 2,
+        self._power_frame = [   5, 5,
 
-                                2, 2,
-                                2, 2,
+                                5, 5,
+                                5, 5,
 
-                                2, 1,
-                                1, 2,
-                                2, 1,
+                                5, 5,
+                                5, 5,
+                                5, 5,
 
-                                1, 2,
-                                2, 1,
+                                5, 5,
+                                5, 5,
 
-                                1, 2,
+                                5, 5,
+
+                                5, 5,
+
+                                5, 5,
+                                5, 5,
+
+                                5, 5,
+                                5, 5,
+                                5, 5,
+
+                                5, 5,
                         ]
         self._brick_strength_frame = [
                                 1, 1,
@@ -75,13 +96,24 @@ class Game:
                                 1, 1,
 
                                 1, 1,
-                                0, 1,
-                                1, 1,
-
                                 1, 1,
                                 1, 1,
 
+                                1, 1,
+                                1, 1,
+
+                                3, 3,
+
+                                1, 1,
+
+                                2, 2,
+                                0, 0,
+
+                                -1, -2,
                                 -3, -3,
+                                -1, -3,
+
+                                0, 0
 
                             ]
 
@@ -93,15 +125,17 @@ class Game:
             if(p_type==0):
                 self._power_ups.append(None)
             elif(p_type==1):
-                self._power_ups.append(Expand_paddle(self._frame[i],[1,1],[0,1],[self._width,self._height]))
+                self._power_ups.append(Expand_paddle(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
             elif(p_type==2):
-                self._power_ups.append(Shrink_paddle(self._frame[i],[1,1],[0,1],[self._width,self._height]))
+                self._power_ups.append(Shrink_paddle(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
             elif(p_type==3):
-                self._power_ups.append(Paddle_grab(self._frame[i],[1,1],[0,1],[self._width,self._height]))
+                self._power_ups.append(Paddle_grab(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
             elif(p_type==4):
-                self._power_ups.append(Thru_ball(self._frame[i],[1,1],[0,1],[self._width,self._height]))
+                self._power_ups.append(Thru_ball(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
             elif(p_type==5):
-                self._power_ups.append(Multiply_ball(self._frame[i],[1,1],[0,1],[self._width,self._height]))
+                self._power_ups.append(Fast_Ball(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
+            elif(p_type==6 ):
+                self._power_ups.append(Multiply_ball(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
 
 
         for i in range(0, len(self._frame)):
@@ -231,10 +265,10 @@ class Game:
                 power_up_type = power_up.get_type()
                 if(0 < power_up_type <= 2):
                     power_up.activate(self._paddle)
-                elif(power_up_type <= 4):
+                elif(power_up_type <= 5):
                     for ball in self._balls:
                         power_up.activate(ball)
-                elif(power_up_type==5):
+                elif(power_up_type==6):
                     power_up.activate(self)
 
 
@@ -283,10 +317,10 @@ class Game:
             if(power_up != None and power_up.is_activated()):
                 if(0 < power_up.get_type() <= 2):
                     power_up.deactivate(self._paddle)
-                elif(power_up.get_type() <= 4):
+                elif(power_up.get_type() <= 5):
                     for ball in self._balls:
                         power_up.deactivate(ball)
-                elif(power_up.get_type() == 5):
+                elif(power_up.get_type() == 6):
                     power_up.deactivate(self)
 
 
@@ -365,10 +399,10 @@ class Game:
                 if(time.time() - power_up.get_time() > 5):
                     if(0< power_up.get_type() <=2):
                         power_up.deactivate(self._paddle)
-                    elif(power_up.get_type() <= 4):
+                    elif(power_up.get_type() <= 5):
                         for ball in self._balls:
                             power_up.deactivate(ball)
-                    elif(power_up.get_type() == 5):
+                    elif(power_up.get_type() == 6):
                         power_up.deactivate(self)
 
     ############# RUN ################################
