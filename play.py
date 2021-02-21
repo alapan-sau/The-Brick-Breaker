@@ -1,8 +1,6 @@
-from numpy.lib.shape_base import expand_dims
 from input import input_to
 import os
 import numpy as np
-import random
 import time
 from screen import Screen
 from Objects import ExplodingBrick, Fast_Ball, Multiply_ball, Paddle, Thru_ball, UnBrick
@@ -11,7 +9,6 @@ from Objects import Brick
 from Objects import Expand_paddle
 from Objects import Shrink_paddle
 from Objects import Paddle_grab
-
 import input
 from input  import Get
 import sys
@@ -64,47 +61,47 @@ class Game:
                             [left+ size*2,top+9],[left+ size*3,top+9]
 
                     ]
-        self._power_frame = [   5, 5,
+        self._power_frame = [   5, 0,
 
-                                5, 5,
-                                5, 5,
+                                1, 2,
+                                2, 1,
 
-                                5, 5,
-                                5, 5,
-                                5, 5,
-
-                                5, 5,
-                                5, 5,
-
-                                5, 5,
-
-                                5, 5,
-
-                                5, 5,
-                                5, 5,
-
-                                5, 5,
-                                5, 5,
-                                5, 5,
-
-                                5, 5,
-                        ]
-        self._brick_strength_frame = [
-                                1, 1,
-
-                                1, 1,
-                                1, 1,
-
-                                1, 1,
-                                1, 1,
-                                1, 1,
-
-                                1, 1,
-                                1, 1,
+                                5, 0,
+                                0, 0,
+                                0, 0,
 
                                 3, 3,
+                                4, 4,
+
+                                0, 0,
+
+                                0, 0,
+
+                                4, 3,
+                                1, 2,
+
+                                2, 3,
+                                0, 0,
+                                1, 4,
+
+                                1, 2,
+                        ]
+        self._brick_strength_frame = [
+                                1, 3,
+
+                                2, 2,
+                                3, 1,
+
+                                2, 2,
+                                2, 3,
+                                3, 1,
 
                                 1, 1,
+                                1, 1,
+
+                                3, 1,
+
+                                2, 1,
 
                                 2, 2,
                                 0, 0,
@@ -323,9 +320,11 @@ class Game:
                 elif(power_up.get_type() == 6):
                     power_up.deactivate(self)
 
+        self._screen.blink_screen()
 
         self._lives = self._lives - 1
         if(self._lives == 0):
+            self._screen.game_lost()
             sys.exit()
         self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
         self._balls = []
@@ -396,7 +395,7 @@ class Game:
                 # self._screen.place_object(power_up)
 
             if(power_up != None and power_up.is_activated()):
-                if(time.time() - power_up.get_time() > 5):
+                if(time.time() - power_up.get_time() > 15):
                     if(0< power_up.get_type() <=2):
                         power_up.deactivate(self._paddle)
                     elif(power_up.get_type() <= 5):
@@ -405,6 +404,13 @@ class Game:
                     elif(power_up.get_type() == 6):
                         power_up.deactivate(self)
 
+    def check_win(self):
+        for brick in self._bricks:
+            if(brick.is_visible()):
+                return
+        self._screen.game_won()
+
+
     ############# RUN ################################
     def run(self):
         while 1:
@@ -412,6 +418,7 @@ class Game:
             self.handle_keyboard_interrupt()
             self._screen.reset_screen()
             self.handle_collisions()
+            self.check_win()
             self.move_items()
             self.place_items()
             self.handle_power_up_timings()

@@ -1,8 +1,5 @@
-import os
 import numpy as np
-import random
 import time
-import sys
 from color import *
 
 
