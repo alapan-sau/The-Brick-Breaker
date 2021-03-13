@@ -400,7 +400,7 @@ class Thru_ball(Power_up):
 
 class Multiply_ball(Power_up):
     def __init__(self,pos, size, speed, max_size):
-        super().__init__(pos,size,speed,max_size,5)
+        super().__init__(pos,size,speed,max_size,6)
         self._structure = np.array([['*']])
         self._num_ball = 0
 

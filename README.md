@@ -1,8 +1,14 @@
 # The Brick Breaker
-
 A python built Brick Breaker game to demonstrate the OOPS concept.
 
-### Features of the Game
+## Instruction to Play
+```shell
+$ pip3 install numpy
+$ python3 play.py
+```
+
+
+## Features of the Game
 * The game consists of a ball, paddle and multiple bricks.
 * Bricks of various strenghts are present, each adding points to the score based on the strength on being broken.
 * The position of the paddle decides the deviation of the ball on hitting
@@ -15,7 +21,7 @@ A python built Brick Breaker game to demonstrate the OOPS concept.
     5) Thru Balls: Balls stop reflecting from bricks, and strength of every ball appears to be minimum.
     6) Paddle Grab: It lets the ball stick to the paddle and relaunch after positoning.
 
-### Controls:
+## Controls:
 
 <button>s</button> - Release the ball from the paddle <br>
 <button>a</button> - Move the paddle to the left <br>

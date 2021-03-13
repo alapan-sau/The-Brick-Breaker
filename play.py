@@ -17,6 +17,13 @@ KEYS = ['a','d']
 class Game:
     def __init__(self):
         rows, cols = os.popen('stty size', 'r').read().split()
+        rows = int(rows)
+        cols = int(cols)
+
+        if(rows < 32 or cols < 128):
+            print("Increase Terminal Screen Size!!")
+            sys.exit(0)
+
         self._floor = int(0.1*(int(rows)))
         self._margin = int(0.4*(int(rows)))
         self._height = int(rows) - self._floor
@@ -81,10 +88,10 @@ class Game:
                                 1, 2,
 
                                 2, 3,
-                                0, 0,
-                                1, 4,
+                                6, 6,
+                                6, 6,
 
-                                1, 2,
+                                6, 2,
                         ]
         self._brick_strength_frame = [
                                 1, 3,
@@ -324,7 +331,7 @@ class Game:
 
         self._lives = self._lives - 1
         if(self._lives == 0):
-            self._screen.game_lost()
+            self._screen.game_lost(self._score)
             sys.exit()
         self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
         self._balls = []
@@ -395,7 +402,7 @@ class Game:
                 # self._screen.place_object(power_up)
 
             if(power_up != None and power_up.is_activated()):
-                if(time.time() - power_up.get_time() > 15):
+                if(time.time() - power_up.get_time() > 60):
                     if(0< power_up.get_type() <=2):
                         power_up.deactivate(self._paddle)
                     elif(power_up.get_type() <= 5):
@@ -408,7 +415,7 @@ class Game:
         for brick in self._bricks:
             if(brick.is_visible()):
                 return
-        self._screen.game_won()
+        self._screen.game_won(game._score)
 
 
     ############# RUN ################################

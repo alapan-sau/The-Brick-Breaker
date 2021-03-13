@@ -61,7 +61,7 @@ class Screen:
         self.render_screen()
         time.sleep(0.1)
 
-    def game_won(self):
+    def game_won(self, score):
 
         print("\033[2J") # clear the screen!!
         print("\033[0;0H")
@@ -79,10 +79,11 @@ class Screen:
 
         print("\n\n\n\n\n\n\n\n\n")
         print(fg.green + message + reset)
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print("\n\n\n\n\n\n\n\n\n\n")
+        print("The Score is ", score)
         sys.exit(0)
 
-    def game_lost(self):
+    def game_lost(self, score):
         print("\033[2J") # clear the screen!!
         print("\033[0;0H")
         message = '''
@@ -97,5 +98,6 @@ class Screen:
 
         print("\n\n\n\n\n\n\n\n\n")
         print(fg.red + message + reset)
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print("\n\n\n\n\n\n\n\n\n\n")
+        print("The Score is ", score)
         sys.exit(0)
