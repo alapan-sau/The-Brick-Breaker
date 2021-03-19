@@ -3,15 +3,18 @@ import os
 import numpy as np
 import time
 from screen import Screen
-from Objects import ExplodingBrick, Fast_Ball, Multiply_ball, Paddle, Thru_ball, UnBrick
+from Objects import Bullet, ExplodingBrick, Fast_Ball, Multiply_ball, Paddle, Shoot_Paddle, Thru_ball, UnBrick
 from Objects import Ball
 from Objects import Brick
 from Objects import Expand_paddle
 from Objects import Shrink_paddle
 from Objects import Paddle_grab
+from Objects import RainbowBrick
 import input
 from input  import Get
 import sys
+import game_layout
+
 KEYS = ['a','d']
 
 class Game:
@@ -30,125 +33,23 @@ class Game:
         self._width = int(cols) - self._margin
         self._screen = Screen(self._height, self._width)
         self._time = time.time()
+        self._counter = 0
+        self._rem_time=0
+
         self._lives = 7
         self._score = 0
+        self._level = 0
+        size = game_layout.size
+        left = game_layout.left
+        top = game_layout.top
 
-        size = 13
-        left = size * 2 - 5
-        top = 5
-        #set the componets
-        self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
-        self._balls = []
-        self._balls.append(Ball([int(self._width/2)-1, self._height-2],[1,1],[0,0], [self._width,self._height], True))
+        self._frame = game_layout.frame
+        self._power_frame = game_layout.power_frame
+        self._brick_strength_frame = game_layout.brick_strength_frame
 
+        self._brick_movement_time = 10
 
-        self._frame = [     [left+ size*0,top],[left+ size*5,top],
-
-                            [left+ size*0,top+1],[left+ size*1,top+1],
-                            [left+ size*4,top+1],[left+ size*5,top+1],
-
-                            [left+ size*0,top+2],[left+ size*1,top+2],
-                            [left+ size*2,top+2],[left+ size*3,top+2],
-                            [left+ size*4,top+2],[left+ size*5,top+2],
-
-                            [left+ size*1,top+3],[left+ size*2,top+3],
-                            [left+ size*3,top+3],[left+ size*4,top+3],
-
-                            [left+ size*2,top+4],[left+ size*3,top+4],
-
-                            [left+ size*2,top+6],[left+ size*3,top+6],
-
-                            [left+ size*1,top+7],[left+ size*2,top+7],
-                            [left+ size*3,top+7],[left+ size*4,top+7],
-
-                            [left+ size*0,top+8],[left+ size*1,top+8],
-                            [left+ size*2,top+8],[left+ size*3,top+8],
-                            [left+ size*4,top+8],[left+ size*5,top+8],
-
-                            [left+ size*2,top+9],[left+ size*3,top+9]
-
-                    ]
-        self._power_frame = [   5, 0,
-
-                                1, 2,
-                                2, 1,
-
-                                5, 0,
-                                0, 0,
-                                0, 0,
-
-                                3, 3,
-                                4, 4,
-
-                                0, 0,
-
-                                0, 0,
-
-                                4, 3,
-                                1, 2,
-
-                                2, 3,
-                                6, 6,
-                                6, 6,
-
-                                6, 2,
-                        ]
-        self._brick_strength_frame = [
-                                1, 3,
-
-                                2, 2,
-                                3, 1,
-
-                                2, 2,
-                                2, 3,
-                                3, 1,
-
-                                1, 1,
-                                1, 1,
-
-                                3, 1,
-
-                                2, 1,
-
-                                2, 2,
-                                0, 0,
-
-                                -1, -2,
-                                -3, -3,
-                                -1, -3,
-
-                                0, 0
-
-                            ]
-
-        self._bricks = []
-        self._power_ups = []
-
-        for i in range(0, len(self._power_frame)):
-            p_type = self._power_frame[i]
-            if(p_type==0):
-                self._power_ups.append(None)
-            elif(p_type==1):
-                self._power_ups.append(Expand_paddle(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
-            elif(p_type==2):
-                self._power_ups.append(Shrink_paddle(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
-            elif(p_type==3):
-                self._power_ups.append(Paddle_grab(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
-            elif(p_type==4):
-                self._power_ups.append(Thru_ball(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
-            elif(p_type==5):
-                self._power_ups.append(Fast_Ball(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
-            elif(p_type==6 ):
-                self._power_ups.append(Multiply_ball(self._frame[i]+np.array([3,0]),[1,1],[0,1],[self._width,self._height]))
-
-
-        for i in range(0, len(self._frame)):
-            if(self._brick_strength_frame[i]< 0):
-                self._bricks.append(ExplodingBrick(self._frame[i],[size,1],[0,0],[self._width,self._height],-self._brick_strength_frame[i],self._power_ups[i]))
-            elif(self._brick_strength_frame[i]):
-                self._bricks.append(Brick(self._frame[i],[size,1],[0,0],[self._width,self._height],self._brick_strength_frame[i],self._power_ups[i]))
-            else:
-                self._bricks.append(UnBrick(self._frame[i],[size,1],[0,0],[self._width,self._height],100,self._power_ups[i]))
+        self.make_layout()
 
     ############## KEYBOARD INTERRUPT ########################
 
@@ -173,7 +74,8 @@ class Game:
             self._balls = []
             self._balls.append( Ball([int(self._width/2), self._height-2],[1,1],[0,0], [self._width,self._height],True) )
 
-
+        elif(ch == 'l'):
+            self.level_up()
 
     ################ COLLISIONS ################################
 
@@ -185,6 +87,11 @@ class Game:
             if( (ball_pos[1]+1 <= paddle_pos[1] and ball_pos[1]+1 + ball_speed[1] > paddle_pos[1]) ):
                 # collision happened!!
                 ball.paddle_collision(ball_pos[0]-paddle_pos[0] - int(paddle_size[0]/2))
+
+                #check the brick have to go down or not besd on time
+                if(time.time() - self._level_time > 10):
+                    for brick in self._bricks:
+                        brick.move_down(self)
 
 
     def handle_ball_brick_collision(self,ball,brick):
@@ -200,58 +107,88 @@ class Game:
 
             # ball from left
             if(ball_pos[0]< brick_pos[0] and ball_pos[0]+ball_speed[0]+1 >=brick_pos[0]):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
 
                 if(ball.is_thru()):
-                    brick.thru_ball_collision(self)
+                    brick.thru_ball_collision(self,old_ball_speed)
                 else:
-                    new_ball_speed = ball_speed
-                    new_ball_speed[0] = -new_ball_speed[0]
-                    new_ball_pos = ball_pos
-                    new_ball_pos[0] = brick_pos[0]-1
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = -ball_speed[0]
+                    new_ball_speed[1] = ball_speed[0]
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]-1
+                    new_ball_pos[1] = ball_pos[1]
                     ball.brick_collision(new_ball_pos, new_ball_speed)
-                    brick.ball_collision(self)
+                    brick.ball_collision(self, old_ball_speed)
 
             # ball from right
             if(ball_pos[0] > brick_pos[0]+brick_size[0] and ball_pos[0]+ball_speed[0] <= brick_pos[0]+brick_size[0]):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
+
                 if(ball.is_thru()):
-                    brick.thru_ball_collision(self)
+                    brick.thru_ball_collision(self,old_ball_speed)
                 else:
-                    new_ball_speed = ball_speed
-                    new_ball_speed[0] = -new_ball_speed[0]
-                    new_ball_pos = ball_pos
-                    new_ball_pos[0] = brick_pos[0]+brick_size[0]
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = -ball_speed[0]
+                    new_ball_speed[1] = ball_speed[1]
+
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]+1
+                    new_ball_pos[1] = ball_pos[1]
 
                     ball.brick_collision(new_ball_pos, new_ball_speed)
-                    brick.ball_collision(self)
+                    brick.ball_collision(self, old_ball_speed)
 
         # vertical collison
         if (ball_pos[0]+1  >= brick_pos[0] and ball_pos[0] <= brick_pos[0]+brick_size[0]):
 
             # ball from top
             if(ball_pos[1]+1 < brick_pos[1] and ball_pos[1]+1+ball_speed[1] >= brick_pos[1]):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
 
                 if(ball.is_thru()):
-                    brick.thru_ball_collision(self)
+                    brick.thru_ball_collision(self,old_ball_speed)
                 else:
-                    new_ball_speed = ball_speed
-                    new_ball_speed[1] = -new_ball_speed[1]
-                    new_ball_pos = ball_pos
-                    new_ball_pos[1] = brick_pos[1]
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = ball_speed[0]
+                    new_ball_speed[1] = -ball_speed[1]
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]
+                    new_ball_pos[1] = ball_pos[1]-1
+
                     ball.brick_collision(new_ball_pos, new_ball_speed)
-                    brick.ball_collision(self)
+                    brick.ball_collision(self, old_ball_speed)
 
             # ball from bottom
             if(ball_pos[1] >= brick_pos[1]+1 and ball_pos[1]+ball_speed[1] < brick_pos[1]+1):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
 
                 if(ball.is_thru()):
-                    brick.thru_ball_collision(self)
+                    brick.thru_ball_collision(self,old_ball_speed)
                 else:
-                    new_ball_speed = ball_speed
-                    new_ball_speed[1] = -new_ball_speed[1]
-                    new_ball_pos = ball_pos
-                    new_ball_pos[1] = brick_pos[1]+1
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = ball_speed[0]
+                    new_ball_speed[1] = -ball_speed[1]
+
+
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]
+                    new_ball_pos[1] = ball_pos[1]+1
+
                     ball.brick_collision(new_ball_pos, new_ball_speed)
-                    brick.ball_collision(self)
+                    brick.ball_collision(self, old_ball_speed)
 
     def handle_paddle_power_up_collision(self, paddle, power_up):
         if(power_up==None):
@@ -267,13 +204,35 @@ class Game:
             if( (power_up_pos[1]+1 <= paddle_pos[1] and power_up_pos[1]+1 + power_up_speed[1] > paddle_pos[1]) ):
                 # collision happened!!
                 power_up_type = power_up.get_type()
-                if(0 < power_up_type <= 2):
+                if(0 < power_up_type <= 2 or power_up_type == 7):
                     power_up.activate(self._paddle)
+                    if(power_up_type==7):
+                        self._rem_time = 10
                 elif(power_up_type <= 5):
                     for ball in self._balls:
                         power_up.activate(ball)
                 elif(power_up_type==6):
                     power_up.activate(self)
+
+
+
+    def handle_bullet_brick_collision(self,bullet,brick):
+
+        if(not(brick.is_visible())):
+            return
+        brick_pos,brick_size,brick_speed = brick.get_dimension()
+        bullet_pos,bullet_size,bullet_speed = bullet.get_dimension()
+
+
+        # vertical collison
+        if (bullet_pos[0]+1  >= brick_pos[0] and bullet_pos[0] <= brick_pos[0]+brick_size[0]):
+
+            # bullet from bottom
+            if(bullet_pos[1] >= brick_pos[1]+1 and bullet_pos[1]+bullet_speed[1] < brick_pos[1]+1):
+
+                bullet.brick_collision()
+                brick.ball_collision(self, np.array([0,-1]))
+                self._bullets.remove(bullet)
 
 
 
@@ -307,6 +266,14 @@ class Game:
             self._balls.remove(self._balls[i])
 
 
+    def handle_paddle_shoot(self):
+        if self._paddle._cannon == 1:
+            if(self._counter%3 ==0):
+                self._bullets.append(Bullet(list(self._paddle._pos),[1,1], [0,-1], [self._width, self._height]))
+                self._bullets.append(Bullet(list(self._paddle._pos + np.array([self._paddle._size[0]-1, 0])),[1,1], [0,-1], [self._width, self._height]))
+
+
+
 
 
     ################ LIFE - SCORE ###################
@@ -319,7 +286,7 @@ class Game:
 
         for power_up in self._power_ups:
             if(power_up != None and power_up.is_activated()):
-                if(0 < power_up.get_type() <= 2):
+                if(0 < power_up.get_type() <= 2 or power_up.get_type() == 7):
                     power_up.deactivate(self._paddle)
                 elif(power_up.get_type() <= 5):
                     for ball in self._balls:
@@ -331,15 +298,14 @@ class Game:
 
         self._lives = self._lives - 1
         if(self._lives == 0):
-            self._screen.game_lost(self._score)
-            sys.exit()
+            self.over()
         self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
         self._balls = []
         self._balls.append(Ball([int(self._width/2)-1, self._height-2],[1,1],[0,0], [self._width,self._height], True))
 
     ################### BONUS ##############################
 
-    def explode_neighbour(self, pos, size):
+    def explode_neighbour(self, pos, size,speed):
         for brick in self._bricks:
             brick_pos,brick_size,brick_speed = brick.get_dimension()
 
@@ -347,17 +313,19 @@ class Game:
                 continue
             elif(pos[0] == brick_pos[0]):
                 if(pos[1]+size[1] == brick_pos[1] or pos[1]-size[1] == brick_pos[1]):
-                    brick.thru_ball_collision(self)
+                    brick.thru_ball_collision(self,speed)
 
             elif(pos[1] == brick_pos[1]):
                 if(pos[0]+size[0] == brick_pos[0] or pos[0]-size[0] == brick_pos[0]):
-                    brick.thru_ball_collision(self)
+                    brick.thru_ball_collision(self,speed)
 
             elif((pos[0]+size[0] == brick_pos[0] or pos[0]-size[0] == brick_pos[0]) and (pos[1]+size[1] == brick_pos[1] or pos[1]-size[1] == brick_pos[1])):
 
-                brick.thru_ball_collision(self)
+                brick.thru_ball_collision(self,speed)
 
     ################## UTILITY ####################
+
+
 
     def place_items(self):
         self._screen.place_object(self._paddle)
@@ -373,6 +341,10 @@ class Game:
             if(power_up != None and power_up.is_visible()):
                 self._screen.place_object(power_up)
 
+
+        for bullet in self._bullets:
+            self._screen.place_object(bullet)
+
     def move_items(self):
         for ball in self._balls:
             if(ball.move()):
@@ -382,7 +354,13 @@ class Game:
 
         for power_up in self._power_ups:
             if(power_up != None and power_up.is_visible()):
-                power_up.move()
+                if(power_up.move()):
+                    self._power_ups.remove(power_up)
+
+        for bullet in self._bullets:
+            if(bullet.move()):
+                self._bullets.remove(bullet)
+
 
     def handle_collisions(self):
         for ball in self._balls:
@@ -391,6 +369,9 @@ class Game:
         for brick in self._bricks:
             for ball in self._balls:
                 self.handle_ball_brick_collision(ball,brick)
+
+            for bullet in self._bullets:
+                self.handle_bullet_brick_collision(bullet,brick)
 
         for power_up in self._power_ups:
             if(power_up != None and power_up.is_visible()):
@@ -402,35 +383,121 @@ class Game:
                 # self._screen.place_object(power_up)
 
             if(power_up != None and power_up.is_activated()):
-                if(time.time() - power_up.get_time() > 60):
-                    if(0< power_up.get_type() <=2):
+                if(time.time() - power_up.get_time()< 10 and power_up.get_type() == 7):
+                    self._rem_time = 10 - int(time.time() - power_up.get_time())
+                if(time.time() - power_up.get_time() > 10):
+                    if(0< power_up.get_type() <=2 or power_up.get_type() == 7):
                         power_up.deactivate(self._paddle)
+                        if(power_up.get_type() == 7):
+                            self._rem_time=0
                     elif(power_up.get_type() <= 5):
                         for ball in self._balls:
                             power_up.deactivate(ball)
                     elif(power_up.get_type() == 6):
                         power_up.deactivate(self)
 
-    def check_win(self):
+    def handle_rainbow_bricks(self):
+        for rainbow in self._bricks:
+            rainbow.change_color_strength()
+
+
+
+    def handle_power_up_accelaration(self):
+        # t = int(time.time() - self._time)
+        for power_up in self._power_ups:
+            if(power_up!=None):
+                if(self._counter%2==0):
+                    power_up.accelarate()
+
+    def check_level_up(self):
         for brick in self._bricks:
             if(brick.is_visible()):
                 return
-        self._screen.game_won(game._score)
+        self.level_up()
 
+
+
+    def make_layout(self):
+
+        size = 13
+        left = size * 2 - 5
+        top = 5
+        self._level_time = time.time()
+    #set the componets
+        self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
+        self._balls = []
+        self._balls.append(Ball([int(self._width/2)-1, self._height-2],[1,1],[0,0], [self._width,self._height], True))
+        self._bricks = []
+        self._power_ups = []
+        self._bullets = []
+
+        for i in range(0, len(self._power_frame[self._level])):
+            p_type = self._power_frame[self._level][i]
+            if(p_type==0):
+                self._power_ups.append(None)
+            elif(p_type==1):
+                self._power_ups.append(Expand_paddle(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif(p_type==2):
+                self._power_ups.append(Shrink_paddle(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif(p_type==3):
+                self._power_ups.append(Paddle_grab(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif(p_type==4):
+                self._power_ups.append(Thru_ball(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif(p_type==5):
+                self._power_ups.append(Fast_Ball(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif(p_type==6 ):
+                self._power_ups.append(Multiply_ball(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif (p_type==7):
+                self._power_ups.append(Shoot_Paddle(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+
+
+
+        for i in range(0, len(self._frame[self._level])):
+            if(self._brick_strength_frame[self._level][i]< 0):
+                self._bricks.append(ExplodingBrick(self._frame[self._level][i],[size,1],[0,0],[self._width,self._height],-self._brick_strength_frame[self._level][i],self._power_ups[i]))
+            elif(self._brick_strength_frame[self._level][i]):
+                if(self._brick_strength_frame[self._level][i]>3):
+                    self._bricks.append(RainbowBrick(self._frame[self._level][i],[size,1],[0,0],[self._width,self._height],2,self._power_ups[i]))
+                else:
+                    self._bricks.append(Brick(self._frame[self._level][i],[size,1],[0,0],[self._width,self._height],self._brick_strength_frame[self._level][i],self._power_ups[i]))
+            else:
+                self._bricks.append(UnBrick(self._frame[self._level][i],[size,1],[0,0],[self._width,self._height],100,self._power_ups[i]))
+
+
+
+    def level_up(self):
+        self._level = self._level+1
+        if(self._level <= 2):
+            self.make_layout()
+        else:
+            self._screen.game_won(game._score)
+            sys.exit(0)
+
+
+    def over(self):
+            self._screen.game_lost(self._score)
+            sys.exit()
+
+    def increment_counter(self):
+        self._counter = self._counter+1
 
     ############# RUN ################################
     def run(self):
         while 1:
+            self.increment_counter()
             self._screen.clean()
             self.handle_keyboard_interrupt()
             self._screen.reset_screen()
             self.handle_collisions()
-            self.check_win()
+            self.check_level_up()
             self.move_items()
             self.place_items()
             self.handle_power_up_timings()
             self._screen.render_screen()
-            print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score)
+            self.handle_rainbow_bricks()
+            self.handle_power_up_accelaration()
+            self.handle_paddle_shoot()
+            print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score, "REMAINING TIME TO SHOOT: ",self._rem_time, "secs")
 
 
 

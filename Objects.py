@@ -24,6 +24,8 @@ class Paddle(Item):
         self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
         self._structure[0][0]=fg.cyan+'('+reset
         self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
+        self._cannon = 0 # the bit for shoot mode
+
 
     def move(self,ch):
         if(ch=='d'):
@@ -40,15 +42,45 @@ class Paddle(Item):
 
     def increase_size(self):
         self._size[0] = self._size[0] + 2
+
+        if self._cannon==1:
+            self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+            self._structure[0][0]=fg.cyan+'^'+reset
+            self._structure[0][self._size[0]-1]=fg.cyan+'^'+reset
+
+        else:
+
+            self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+            self._structure[0][0]=fg.cyan+'('+reset
+            self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
+
+    def decrease_size(self):
+        self._size[0] = self._size[0] - 2
+
+
+        if self._cannon==1:
+            self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+            self._structure[0][0]=fg.cyan+'^'+reset
+            self._structure[0][self._size[0]-1]=fg.cyan+'^'+reset
+
+        else:
+
+            self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+            self._structure[0][0]=fg.cyan+'('+reset
+            self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
+
+    def activate_cannon(self):
+        self._cannon=1
+        self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0]=fg.cyan+'^'+reset
+        self._structure[0][self._size[0]-1]=fg.cyan+'^'+reset
+
+    def deactivate_cannon(self):
+        self._cannon=0
         self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
         self._structure[0][0]=fg.cyan+'('+reset
         self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
 
-    def decrease_size(self):
-        self._size[0] = self._size[0] - 2
-        self._structure = np.array([[fg.cyan+'I'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
-        self._structure[0][0]=fg.cyan+'('+reset
-        self._structure[0][self._size[0]-1]=fg.cyan+')'+reset
 
 class Ball(Item):
     def __init__(self,pos,size,speed,max_size,stick):
@@ -178,11 +210,13 @@ class Brick(Item):
 
         self._visible = 1
         self._power_up = power_up
+        self._change_color = False
 
 
-    def ball_collision(self,game):
+    def ball_collision(self,game, speed):
         self._strength = self._strength -1
         game.increase_score(1)
+        self._change_color = False
 
         if(self._strength == 3):
             self._color = fg.red
@@ -199,20 +233,44 @@ class Brick(Item):
             self._visible = 0
             if(self._power_up != None):
                 self._power_up.make_visible()
+                self._power_up.change_speed(speed)
 
     def is_visible(self):
         return self._visible
 
+    def move_down(self, game):
+        self._pos[1] = self._pos[1]+1
+        if(self._power_up != None):
+            self._power_up.move_down()
+        if(self._pos[1] > self._max_size[1]+1):
+            game.over()
+
+    def change_color_strength(self):
+        if(self._change_color==True):
+            self._strength = (self._strength+1)%3+1
+
+            if(self._strength == 3):
+                self._color = fg.red
+            elif(self._strength == 2):
+                self._color = fg.yellow
+            elif(self._strength == 1):
+                self._color = fg.green
+
+            self._structure = np.array([[self._color+'R'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+            self._structure[0][0] = self._color+'|'+reset
+            self._structure[0][self._size[0]-1] = self._color+'|'+reset
+
+
 
     ###### POWER UP functionalities ############
-    def thru_ball_collision(self,game):
+    def thru_ball_collision(self,game,speed):
         game.increase_score(self._strength)
         self._strength = 0
         if(self._strength==0):
             self._visible = 0
             if(self._power_up != None):
                 self._power_up.make_visible()
-
+                self._power_up.change_speed(speed)
 
 
 class UnBrick(Brick):
@@ -229,16 +287,16 @@ class UnBrick(Brick):
 
     ########### Both are overloaded #############
 
-    def ball_collision(self,game):
+    def ball_collision(self,game,speed):
         return
 
     ## POWER UP functionalities ##
-    def thru_ball_collision(self,game):
+    def thru_ball_collision(self,game,speed):
         game.increase_score(5)
         self._visible = 0
         if(self._power_up != None):
             self._power_up.make_visible()
-
+            self._power_up.change_speed(speed)
 
 class ExplodingBrick(Brick):
     def __init__(self,pos,size,speed,max_size,strength,power_up):
@@ -264,7 +322,7 @@ class ExplodingBrick(Brick):
 
     ########### Both are overloaded #############
 
-    def ball_collision(self,game):
+    def ball_collision(self,game,speed):
         self._strength = self._strength -1
         game.increase_score(1)
 
@@ -283,18 +341,38 @@ class ExplodingBrick(Brick):
             self._visible = 0
             if(self._power_up != None):
                 self._power_up.make_visible()
-            game.explode_neighbour(self._pos, self._size)
+                self._power_up.change_speed(speed)
+            game.explode_neighbour(self._pos, self._size,speed)
 
     ###### POWER UP functionalities ############
-    def thru_ball_collision(self,game):
-        print(1)
+    def thru_ball_collision(self,game,speed):
         game.increase_score(self._strength)
         self._strength = 0
         if(self._strength==0):
             self._visible = 0
             if(self._power_up != None):
                 self._power_up.make_visible()
-            game.explode_neighbour(self._pos, self._size)
+            game.explode_neighbour(self._pos, self._size,speed)
+            self._power_up.change_speed(speed)
+
+class RainbowBrick(Brick):
+    def __init__(self,pos,size,speed,max_size,strength,power_up):
+        super().__init__(pos,size,speed,max_size,strength,power_up)
+        self._strength = strength
+        if(self._strength == 3):
+            self._color = fg.red
+        elif(self._strength == 2):
+            self._color = fg.yellow
+        elif(self._strength == 1):
+            self._color = fg.green
+
+        self._structure = np.array([[self._color+'R'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._structure[0][0] = self._color+'|'+reset
+        self._structure[0][self._size[0]-1] = self._color+'|'+reset
+
+        self._visible = 1
+        self._power_up = power_up
+        self._change_color = True
 
 
 class Power_up(Item):
@@ -305,6 +383,9 @@ class Power_up(Item):
         self._activated = False
         self._time = 0
 
+    def accelarate(self):
+        if(self._visible == 1):
+            self._speed[1] = self._speed[1]+1
 
     def make_visible(self):
         self._visible = 1
@@ -314,6 +395,50 @@ class Power_up(Item):
         return self._visible
     def move(self):
         self._pos = self._pos  + self._speed
+
+        # self._speed[1] = self._speed[1]+1
+
+
+        # WALL COLLISION CONDITIONS
+        # left wall
+        if(self._pos[0] <= 0 or (self._pos[0]>0 and self._pos[0]+ self._speed[0]<=0 ) ):
+            # set the postion to avoid out of bound
+            self._pos[0] = 1
+            if(self._speed[0] < 0):
+                self._speed[0] = -self._speed[0]
+
+        # right wall
+        if(self._pos[0] +1 >= self._max_size[0]-1   or (self._pos[0] < self._max_size[0]-1 and self._pos[0]+ self._speed[0] >= self._max_size[0]-1) ):
+            # set the postion to avoid out of bound
+            self._pos[0] = self._max_size[0]-2
+            if(self._speed[0] > 0):
+                self._speed[0] = -self._speed[0]
+
+        # top wall
+        if(self._pos[1] <= 1 or (self._pos[1]>1 and self._pos[1]+ self._speed[1] <=1 )):
+            # set the postion to avoid out of bound
+            self._pos[1] = 1
+            if(self._speed[1]< 0):
+                self._speed[1] = -self._speed[1]
+
+
+        # bottom wall(VIRTUAL WALL)
+        if(self._pos[1] >= self._max_size[1]-1):
+            # set the postion to avoid out of bound
+            self._pos[1] = self._max_size[1]-1
+            if(self._speed[1] != 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+
+
+
+    def change_speed(self, new_speed):
+        self._speed=np.array([0,0])
+        self._speed[0] = new_speed[0]
+        self._speed[1] = new_speed[1]
+
 
         if(self._pos[1]+self._size[1] > self._max_size[1]):
             self._pos = np.array([0,0])
@@ -332,6 +457,9 @@ class Power_up(Item):
 
     def get_time(self):
         return self._time
+
+    def move_down(self):
+        self._pos[1] = self._pos[1]+1
 
 
 class Expand_paddle(Power_up):
@@ -431,3 +559,74 @@ class Fast_Ball(Power_up):
     def deactivate(self,ball):
         ball.decrease_speed()
         self._activated = 0
+
+
+
+class Shoot_Paddle(Power_up):
+    def __init__(self,pos, size, speed, max_size):
+        super().__init__(pos,size,speed,max_size,7)
+        self._structure = np.array([['S']])
+
+    def activate(self, paddle):
+        self._visible = 0
+        paddle.activate_cannon()
+        self._activated = 1
+        self._time = time.time()
+
+
+    def deactivate(self,paddle):
+        self._activated = 0
+        paddle.deactivate_cannon()
+
+
+
+
+class Bullet(Item):
+    def __init__(self,pos,size,speed,max_size):
+        super().__init__(pos,size,speed,max_size)
+        self._structure = np.array([['"']])
+
+
+    def move(self):
+        self._pos[1] = self._pos[1]  + self._speed[1]
+
+        # WALL COLLISION CONDITIONS
+        # left wall
+        if(self._pos[0] <= 0 or (self._pos[0]>0 and self._pos[0]+ self._speed[0]<=0 ) ):
+            # set the postion to avoid out of bound
+            self._pos[0] = 1
+            if(self._speed[0] < 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+        # right wall
+        if(self._pos[0] +1 >= self._max_size[0]-1   or (self._pos[0] < self._max_size[0]-1 and self._pos[0]+ self._speed[0] >= self._max_size[0]-1) ):
+            # set the postion to avoid out of bound
+            self._pos[0] = self._max_size[0]-2
+            if(self._speed[0] > 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+        # top wall
+        if(self._pos[1] <= 1 or (self._pos[1]>1 and self._pos[1]+ self._speed[1] <=1 )):
+            # set the postion to avoid out of bound
+            self._pos[1] = 1
+            if(self._speed[1]< 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+        # bottom wall(VIRTUAL WALL)
+        if(self._pos[1] >= self._max_size[1]-1):
+            # set the postion to avoid out of bound
+            self._pos[1] = self._max_size[1]-1
+            if(self._speed[1] != 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+
+    def brick_collision(self):
+        pass
