@@ -562,10 +562,28 @@ class Fast_Ball(Power_up):
 
 
 
+class Fire_Ball(Power_up):
+    def __init__(self,pos, size, speed, max_size):
+        super().__init__(pos,size,speed,max_size,8)
+        self._structure = np.array([['M']])
+
+    def activate(self, game):
+        self._visible = 0
+        self._activated = 1
+        self._time = time.time()
+        game._fireball = 1
+
+
+    def deactivate(self,game):
+        self._activated = 0
+        game._fireball = 0
+
+
+
 class Shoot_Paddle(Power_up):
     def __init__(self,pos, size, speed, max_size):
         super().__init__(pos,size,speed,max_size,7)
-        self._structure = np.array([['S']])
+        self._structure = np.array([['Q']])
 
     def activate(self, paddle):
         self._visible = 0
@@ -630,3 +648,74 @@ class Bullet(Item):
 
     def brick_collision(self):
         pass
+
+
+class UFO(Item):
+    def __init__(self,pos,size,speed,max_size):
+        super().__init__(pos,size,speed,max_size)
+        self._structure = np.array([[fg.cyan+'o'+reset for j in range(self._size[0])] for i in range(self._size[1])], dtype='object')
+        self._health = 10
+        self._weak_one = 1
+        self._weak_two = 1
+
+    def set_ufo_pos(self, pos):
+        self._pos = pos
+        if(self._pos[0]+self._size[0] >= self._max_size[0]-1):
+            self._pos[0] = self._max_size[0] - self._size[0] - 1
+        if(self._pos[0] <= 0):
+            self._pos[0] = 1
+
+    def ball_collision(self):
+        self._health = self._health - 1
+
+    def get_health(self):
+        if self._health > 0:
+            return self._health
+        else:
+            return 0
+
+class Bomb(Item):
+    def __init__(self,pos,size,speed,max_size):
+        super().__init__(pos,size,speed,max_size)
+        self._structure = np.array([['@']])
+
+
+    def move(self):
+        self._pos[1] = self._pos[1]  + self._speed[1]
+
+        # WALL COLLISION CONDITIONS
+        # left wall
+        if(self._pos[0] <= 0 or (self._pos[0]>0 and self._pos[0]+ self._speed[0]<=0 ) ):
+            # set the postion to avoid out of bound
+            self._pos[0] = 1
+            if(self._speed[0] < 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+        # right wall
+        if(self._pos[0] +1 >= self._max_size[0]-1   or (self._pos[0] < self._max_size[0]-1 and self._pos[0]+ self._speed[0] >= self._max_size[0]-1) ):
+            # set the postion to avoid out of bound
+            self._pos[0] = self._max_size[0]-2
+            if(self._speed[0] > 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+        # top wall
+        if(self._pos[1] <= 1 or (self._pos[1]>1 and self._pos[1]+ self._speed[1] <=1 )):
+            # set the postion to avoid out of bound
+            self._pos[1] = 1
+            if(self._speed[1]< 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True
+
+        # bottom wall(VIRTUAL WALL)
+        if(self._pos[1] >= self._max_size[1]):
+            # set the postion to avoid out of bound
+            self._pos[1] = self._max_size[1]
+            if(self._speed[1] != 0):
+                self._speed[1] = 0
+                self._speed[0] = 0
+                return True

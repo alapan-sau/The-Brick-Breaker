@@ -3,7 +3,7 @@ import os
 import numpy as np
 import time
 from screen import Screen
-from Objects import Bullet, ExplodingBrick, Fast_Ball, Multiply_ball, Paddle, Shoot_Paddle, Thru_ball, UnBrick
+from Objects import Bomb, Bullet, ExplodingBrick, Fast_Ball, Fire_Ball, Multiply_ball, Paddle, Shoot_Paddle, Thru_ball, UFO, UnBrick
 from Objects import Ball
 from Objects import Brick
 from Objects import Expand_paddle
@@ -27,16 +27,17 @@ class Game:
             print("Increase Terminal Screen Size!!")
             sys.exit(0)
 
-        self._floor = int(0.1*(int(rows)))
+        self._floor = int(0.1*(int(rows)))-4
         self._margin = int(0.4*(int(rows)))
-        self._height = int(rows) - self._floor
+        self._height = int(rows) - self._floor-4
         self._width = int(cols) - self._margin
         self._screen = Screen(self._height, self._width)
         self._time = time.time()
-        self._counter = 0
+        self._counter=0
         self._rem_time=0
+        self._fireball=0
 
-        self._lives = 7
+        self._lives = 15
         self._score = 0
         self._level = 0
         size = game_layout.size
@@ -58,6 +59,8 @@ class Game:
         ch = input_to(get.__call__)
         if ch in KEYS:
             self._paddle.move(ch)
+            # if(self._level==2):
+            #     self._ufo.move(ch)
             # fixed
             for ball in self._balls:
                 ball.move_with_paddle(ch)
@@ -111,12 +114,26 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
-                if(ball.is_thru()):
+                if(self._fireball==1):
+                    brick.thru_ball_collision(self,old_ball_speed)
+                    game.explode_neighbour(brick_pos, brick_size, brick_speed)
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]-1
+                    new_ball_pos[1] = ball_pos[1]
+
+
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = ball_speed[0]
+                    new_ball_speed[1] = -ball_speed[1]
+                    ball.brick_collision(new_ball_pos, new_ball_speed)
+
+                elif(ball.is_thru()):
                     brick.thru_ball_collision(self,old_ball_speed)
                 else:
                     new_ball_speed = np.array([0,0])
                     new_ball_speed[0] = -ball_speed[0]
-                    new_ball_speed[1] = ball_speed[0]
+                    new_ball_speed[1] = ball_speed[1]
 
                     new_ball_pos = np.array([0,0])
                     new_ball_pos[0] = ball_pos[0]-1
@@ -130,7 +147,20 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
-                if(ball.is_thru()):
+                if(self._fireball==1):
+                    brick.thru_ball_collision(self,old_ball_speed)
+                    game.explode_neighbour(brick_pos, brick_size, brick_speed)
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]+1
+                    new_ball_pos[1] = ball_pos[1]
+
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = -ball_speed[0]
+                    new_ball_speed[1] = ball_speed[1]
+                    ball.brick_collision(new_ball_pos, new_ball_speed)
+
+                elif(ball.is_thru()):
                     brick.thru_ball_collision(self,old_ball_speed)
                 else:
                     new_ball_speed = np.array([0,0])
@@ -154,7 +184,21 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
-                if(ball.is_thru()):
+                if(self._fireball==1):
+                    brick.thru_ball_collision(self,old_ball_speed)
+                    game.explode_neighbour(brick_pos, brick_size, brick_speed)
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]
+                    new_ball_pos[1] = ball_pos[1]-1
+
+
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = ball_speed[0]
+                    new_ball_speed[1] = -ball_speed[1]
+                    ball.brick_collision(new_ball_pos, new_ball_speed)
+
+                elif(ball.is_thru()):
                     brick.thru_ball_collision(self,old_ball_speed)
                 else:
                     new_ball_speed = np.array([0,0])
@@ -174,7 +218,22 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
-                if(ball.is_thru()):
+
+                if(self._fireball==1):
+                    brick.thru_ball_collision(self,old_ball_speed)
+                    game.explode_neighbour(brick_pos, brick_size, brick_speed)
+
+                    new_ball_pos = np.array([0,0])
+                    new_ball_pos[0] = ball_pos[0]
+                    new_ball_pos[1] = ball_pos[1]+1
+
+
+                    new_ball_speed = np.array([0,0])
+                    new_ball_speed[0] = ball_speed[0]
+                    new_ball_speed[1] = -ball_speed[1]
+                    ball.brick_collision(new_ball_pos, new_ball_speed)
+
+                elif(ball.is_thru()):
                     brick.thru_ball_collision(self,old_ball_speed)
                 else:
                     new_ball_speed = np.array([0,0])
@@ -213,7 +272,19 @@ class Game:
                         power_up.activate(ball)
                 elif(power_up_type==6):
                     power_up.activate(self)
+                elif (power_up_type == 8):
+                    power_up.activate(self)
 
+
+    def handle_paddle_bomb_collision(self, bomb):
+
+        paddle_pos,paddle_size,paddle_speed = self._paddle.get_dimension()
+        bomb_pos,bomb_size,bomb_speed = bomb.get_dimension()
+
+        if(bomb_pos[0] >= paddle_pos[0] and bomb_pos[0] < paddle_pos[0] + paddle_size[0]):
+            if( (bomb_pos[1]+1 <= paddle_pos[1] and bomb_pos[1]+1 + bomb_speed[1] > paddle_pos[1]) ):
+                # collision happened!!
+                self.new_life()
 
 
     def handle_bullet_brick_collision(self,bullet,brick):
@@ -234,6 +305,87 @@ class Game:
                 brick.ball_collision(self, np.array([0,-1]))
                 self._bullets.remove(bullet)
 
+    def handle_ufo_ball_collision(self,ball):
+
+        ufo_pos,ufo_size,ufo_speed = self._ufo.get_dimension()
+        ball_pos,ball_size,ball_speed = ball.get_dimension()
+
+
+        # horizontal collision
+        if(ball_pos[1] == ufo_pos[1]):
+
+            # ball from left
+            if(ball_pos[0]< ufo_pos[0] and ball_pos[0]+ball_speed[0]+1 >=ufo_pos[0]):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
+
+                new_ball_speed = np.array([0,0])
+                new_ball_speed[0] = -ball_speed[0]
+                new_ball_speed[1] = ball_speed[1]
+
+                new_ball_pos = np.array([0,0])
+                new_ball_pos[0] = ball_pos[0]-1
+                new_ball_pos[1] = ball_pos[1]
+                ball.brick_collision(new_ball_pos, new_ball_speed)
+                self._ufo.ball_collision()
+
+            # ball from right
+            if(ball_pos[0] > ufo_pos[0]+ufo_size[0] and ball_pos[0]+ball_speed[0] <= ufo_pos[0]+ufo_size[0]):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
+
+                new_ball_speed = np.array([0,0])
+                new_ball_speed[0] = -ball_speed[0]
+                new_ball_speed[1] = ball_speed[1]
+
+
+                new_ball_pos = np.array([0,0])
+                new_ball_pos[0] = ball_pos[0]+1
+                new_ball_pos[1] = ball_pos[1]
+
+                ball.brick_collision(new_ball_pos, new_ball_speed)
+                self._ufo.ball_collision()
+
+        # vertical collison
+        if (ball_pos[0]+1  >= ufo_pos[0] and ball_pos[0] <= ufo_pos[0]+ufo_size[0]):
+
+            # ball from top
+            if(ball_pos[1]+1 < ufo_pos[1] and ball_pos[1]+1+ball_speed[1] >= ufo_pos[1]):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
+
+                new_ball_speed = np.array([0,0])
+                new_ball_speed[0] = ball_speed[0]
+                new_ball_speed[1] = -ball_speed[1]
+
+                new_ball_pos = np.array([0,0])
+                new_ball_pos[0] = ball_pos[0]
+                new_ball_pos[1] = ball_pos[1]-1
+
+                ball.brick_collision(new_ball_pos, new_ball_speed)
+                self._ufo.ball_collision()
+
+            # ball from bottom
+            if(ball_pos[1] >= ufo_pos[1]+1 and ball_pos[1]+ball_speed[1] < ufo_pos[1]+1):
+                old_ball_speed = np.array([0,0])
+                old_ball_speed[0] = ball_speed[0]
+                old_ball_speed[1] = ball_speed[1]
+
+                new_ball_speed = np.array([0,0])
+                new_ball_speed[0] = ball_speed[0]
+                new_ball_speed[1] = -ball_speed[1]
+
+
+
+                new_ball_pos = np.array([0,0])
+                new_ball_pos[0] = ball_pos[0]
+                new_ball_pos[1] = ball_pos[1]+1
+
+                ball.brick_collision(new_ball_pos, new_ball_speed)
+                self._ufo.ball_collision()
 
 
     ######## POWER UP functionalitites ###############
@@ -273,9 +425,25 @@ class Game:
                 self._bullets.append(Bullet(list(self._paddle._pos + np.array([self._paddle._size[0]-1, 0])),[1,1], [0,-1], [self._width, self._height]))
 
 
+    def handle_ufo_bomb(self):
+        if(self._level == 2 and self._ufo.get_health()):
+            if(self._counter%40 ==0):
+                ufo_pos,ufo_size,ufo_speed = self._ufo.get_dimension()
+                self._bombs.append(Bomb([ufo_pos[0]+3, ufo_pos[1]],[1,1], [0,1], [self._width, self._height]))
 
 
+    def handle_brick_respawn(self):
+        if self._level==2 and self._ufo.get_health()==5 and self._ufo._weak_one:
+            size = game_layout.size
+            self._ufo._weak_one = 0
+            for i in range(0, len(game_layout.weak_one)):
+                self._bricks.append(Brick(game_layout.weak_one[i],[size,1],[0,0],[self._width,self._height],1,None))
 
+        if self._level==2 and self._ufo.get_health()==2 and self._ufo._weak_two:
+            size = game_layout.size
+            self._ufo._weak_two = 0
+            for i in range(0, len(game_layout.weak_two)):
+                self._bricks.append(Brick(game_layout.weak_two[i],[size,1],[0,0],[self._width,self._height],1,None))
     ################ LIFE - SCORE ###################
 
     def increase_score(self, num):
@@ -345,6 +513,12 @@ class Game:
         for bullet in self._bullets:
             self._screen.place_object(bullet)
 
+        if(self._level==2 and self._ufo.get_health()):
+            self._screen.place_object(self._ufo)
+
+            for bomb in self._bombs:
+                self._screen.place_object(bomb)
+
     def move_items(self):
         for ball in self._balls:
             if(ball.move()):
@@ -362,6 +536,14 @@ class Game:
                 self._bullets.remove(bullet)
 
 
+        if self._level == 2 and self._ufo.get_health():
+            paddle_pos,paddle_size,paddle_speed = self._paddle.get_dimension()
+            self._ufo.set_ufo_pos(np.array([paddle_pos[0], 4]))
+
+            for bomb in self._bombs:
+                if (bomb.move()):
+                    self._bombs.remove(bomb)
+
     def handle_collisions(self):
         for ball in self._balls:
             self.handle_paddle_ball_collision(ball, self._paddle)
@@ -376,6 +558,14 @@ class Game:
         for power_up in self._power_ups:
             if(power_up != None and power_up.is_visible()):
                 self.handle_paddle_power_up_collision(self._paddle,power_up)
+
+        if self._level == 2:
+            if(self._ufo.get_health()):
+                for ball in self._balls:
+                    self.handle_ufo_ball_collision(ball)
+
+            for bomb in self._bombs:
+                self.handle_paddle_bomb_collision(bomb)
 
     def handle_power_up_timings(self):
         for power_up in self._power_ups:
@@ -395,6 +585,8 @@ class Game:
                             power_up.deactivate(ball)
                     elif(power_up.get_type() == 6):
                         power_up.deactivate(self)
+                    elif (power_up.get_type() == 8):
+                        power_up.deactivate(self)
 
     def handle_rainbow_bricks(self):
         for rainbow in self._bricks:
@@ -410,10 +602,19 @@ class Game:
                     power_up.accelarate()
 
     def check_level_up(self):
-        for brick in self._bricks:
-            if(brick.is_visible()):
+        if (self._level < 2):
+            for brick in self._bricks:
+                if(brick.is_visible()):
+                    return
+            self.level_up()
+        else:
+            for brick in self._bricks:
+                if(brick.is_visible()):
+                    return
+            if self._ufo.get_health():
                 return
-        self.level_up()
+            self.level_up()
+
 
 
 
@@ -449,6 +650,8 @@ class Game:
                 self._power_ups.append(Multiply_ball(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
             elif (p_type==7):
                 self._power_ups.append(Shoot_Paddle(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
+            elif (p_type == 8):
+                self._power_ups.append(Fire_Ball(self._frame[self._level][i]+np.array([3,0]),[1,1],[0,0],[self._width,self._height]))
 
 
 
@@ -463,6 +666,9 @@ class Game:
             else:
                 self._bricks.append(UnBrick(self._frame[self._level][i],[size,1],[0,0],[self._width,self._height],100,self._power_ups[i]))
 
+        if(self._level ==2):
+            self._ufo = UFO([int(self._width/2)-6, self._height-5],[13,1],[0,0], [self._width,self._height])
+            self._bombs=[]
 
 
     def level_up(self):
@@ -497,9 +703,11 @@ class Game:
             self.handle_rainbow_bricks()
             self.handle_power_up_accelaration()
             self.handle_paddle_shoot()
-            print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score, "REMAINING TIME TO SHOOT: ",self._rem_time, "secs")
-
-
+            self.handle_ufo_bomb()
+            self.handle_brick_respawn()
+            print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score, "REMAINING TIME TO SHOOT: ",self._rem_time, "secs", "     ")
+            if(self._level==2 and self._ufo.get_health()):
+                print("HEALTH: ",self._ufo._health, "      ", end="")
 
 game = Game()
 game.run()
