@@ -14,6 +14,10 @@ import input
 from input  import Get
 import sys
 import game_layout
+from color import *
+
+import simpleaudio as sa
+
 
 KEYS = ['a','d']
 
@@ -89,10 +93,15 @@ class Game:
         if(ball_pos[0] >= paddle_pos[0] and ball_pos[0] < paddle_pos[0] + paddle_size[0]):
             if( (ball_pos[1]+1 <= paddle_pos[1] and ball_pos[1]+1 + ball_speed[1] > paddle_pos[1]) ):
                 # collision happened!!
+
+                import os
+                os.system("afplay ./paddle_ball_audio.wav &")
+
                 ball.paddle_collision(ball_pos[0]-paddle_pos[0] - int(paddle_size[0]/2))
 
+
                 #check the brick have to go down or not besd on time
-                if(time.time() - self._level_time > 10):
+                if(time.time() - self._level_time > 60):
                     for brick in self._bricks:
                         brick.move_down(self)
 
@@ -114,6 +123,9 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
+                os.system("afplay ./paddle_ball_audio.wav &")
+
+
                 if(self._fireball==1):
                     brick.thru_ball_collision(self,old_ball_speed)
                     game.explode_neighbour(brick_pos, brick_size, brick_speed)
@@ -127,6 +139,7 @@ class Game:
                     new_ball_speed[0] = ball_speed[0]
                     new_ball_speed[1] = -ball_speed[1]
                     ball.brick_collision(new_ball_pos, new_ball_speed)
+
 
                 elif(ball.is_thru()):
                     brick.thru_ball_collision(self,old_ball_speed)
@@ -143,9 +156,12 @@ class Game:
 
             # ball from right
             if(ball_pos[0] > brick_pos[0]+brick_size[0] and ball_pos[0]+ball_speed[0] <= brick_pos[0]+brick_size[0]):
+
                 old_ball_speed = np.array([0,0])
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
+
+                os.system("afplay ./paddle_ball_audio.wav &")
 
                 if(self._fireball==1):
                     brick.thru_ball_collision(self,old_ball_speed)
@@ -180,6 +196,10 @@ class Game:
 
             # ball from top
             if(ball_pos[1]+1 < brick_pos[1] and ball_pos[1]+1+ball_speed[1] >= brick_pos[1]):
+
+
+                os.system("afplay ./paddle_ball_audio.wav &")
+
                 old_ball_speed = np.array([0,0])
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
@@ -214,6 +234,10 @@ class Game:
 
             # ball from bottom
             if(ball_pos[1] >= brick_pos[1]+1 and ball_pos[1]+ball_speed[1] < brick_pos[1]+1):
+
+
+                os.system("afplay ./paddle_ball_audio.wav &")
+
                 old_ball_speed = np.array([0,0])
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
@@ -284,6 +308,8 @@ class Game:
         if(bomb_pos[0] >= paddle_pos[0] and bomb_pos[0] < paddle_pos[0] + paddle_size[0]):
             if( (bomb_pos[1]+1 <= paddle_pos[1] and bomb_pos[1]+1 + bomb_speed[1] > paddle_pos[1]) ):
                 # collision happened!!
+
+                os.system("afplay explosion.mp3 &")
                 self.new_life()
 
 
@@ -330,6 +356,7 @@ class Game:
                 ball.brick_collision(new_ball_pos, new_ball_speed)
                 self._ufo.ball_collision()
 
+                os.system("afplay boss_hit.mp3 &")
             # ball from right
             if(ball_pos[0] > ufo_pos[0]+ufo_size[0] and ball_pos[0]+ball_speed[0] <= ufo_pos[0]+ufo_size[0]):
                 old_ball_speed = np.array([0,0])
@@ -347,7 +374,7 @@ class Game:
 
                 ball.brick_collision(new_ball_pos, new_ball_speed)
                 self._ufo.ball_collision()
-
+                os.system("afplay boss_hit.mp3 &")
         # vertical collison
         if (ball_pos[0]+1  >= ufo_pos[0] and ball_pos[0] <= ufo_pos[0]+ufo_size[0]):
 
@@ -367,7 +394,7 @@ class Game:
 
                 ball.brick_collision(new_ball_pos, new_ball_speed)
                 self._ufo.ball_collision()
-
+                os.system("afplay boss_hit.mp3 &")
             # ball from bottom
             if(ball_pos[1] >= ufo_pos[1]+1 and ball_pos[1]+ball_speed[1] < ufo_pos[1]+1):
                 old_ball_speed = np.array([0,0])
@@ -386,7 +413,7 @@ class Game:
 
                 ball.brick_collision(new_ball_pos, new_ball_speed)
                 self._ufo.ball_collision()
-
+                os.system("afplay boss_hit.mp3 &")
 
     ######## POWER UP functionalitites ###############
 
@@ -421,6 +448,7 @@ class Game:
     def handle_paddle_shoot(self):
         if self._paddle._cannon == 1:
             if(self._counter%3 ==0):
+                os.system('afplay fire.mp3 &')
                 self._bullets.append(Bullet(list(self._paddle._pos),[1,1], [0,-1], [self._width, self._height]))
                 self._bullets.append(Bullet(list(self._paddle._pos + np.array([self._paddle._size[0]-1, 0])),[1,1], [0,-1], [self._width, self._height]))
 
@@ -470,10 +498,12 @@ class Game:
         self._paddle = Paddle([int(self._width/2)-6, self._height-1],[13,1],[0,0], [self._width,self._height])
         self._balls = []
         self._balls.append(Ball([int(self._width/2)-1, self._height-2],[1,1],[0,0], [self._width,self._height], True))
-
+        self._rem_time = 0
     ################### BONUS ##############################
 
     def explode_neighbour(self, pos, size,speed):
+
+        os.system("afplay ./explosion.mp3 &")
         for brick in self._bricks:
             brick_pos,brick_size,brick_speed = brick.get_dimension()
 
@@ -595,7 +625,6 @@ class Game:
 
 
     def handle_power_up_accelaration(self):
-        # t = int(time.time() - self._time)
         for power_up in self._power_ups:
             if(power_up!=None):
                 if(self._counter%2==0):
@@ -608,9 +637,9 @@ class Game:
                     return
             self.level_up()
         else:
-            for brick in self._bricks:
-                if(brick.is_visible()):
-                    return
+            # for brick in self._bricks:
+            #     if(brick.is_visible()):
+            #         return
             if self._ufo.get_health():
                 return
             self.level_up()
@@ -669,6 +698,7 @@ class Game:
         if(self._level ==2):
             self._ufo = UFO([int(self._width/2)-6, self._height-5],[13,1],[0,0], [self._width,self._height])
             self._bombs=[]
+            os.system("afplay boss.wav &")
 
 
     def level_up(self):
@@ -705,9 +735,17 @@ class Game:
             self.handle_paddle_shoot()
             self.handle_ufo_bomb()
             self.handle_brick_respawn()
-            print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score, "REMAINING TIME TO SHOOT: ",self._rem_time, "secs", "     ")
+
+
+            if(self._rem_time > 0):
+                print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score," SHOOT TIME LEFT: ",self._rem_time,"     ")
+            else:
+                print("LIVES: ",self._lives,"TIME: ",int(time.time()-self._time),"SCORE: ",self._score,"                                           ")
             if(self._level==2 and self._ufo.get_health()):
-                print("HEALTH: ",self._ufo._health, "      ", end="")
+                health = ""
+                for i in range(0,self._ufo.get_health()):
+                    health = health+bg.red+" "+reset +bg.red+" "+reset
+                print("HEALTH: ",health, "      ", end="")
 
 game = Game()
 game.run()

@@ -39,9 +39,13 @@ frame = [
                             [left+ size*4,top+2],[left+ size*5,top+2],
 
 
-                            [left+ size*2,top+4],[left+ size*3,top+4],
+                            [left+ size*1,top+4],[left+ size*4,top+4],
 
-                            [left+ size*2,top+6],[left+ size*3,top+6],
+                            [left+ size*1,top+5],[left+ size*4,top+5],
+                            [left+ size*1,top+5],[left+ size*4,top+6],
+                            [left+ size*1,top+7],[left+ size*4,top+7],
+
+
 
                             [left+ size*0,top+8],[left+ size*1,top+8],
                             [left+ size*2,top+8],[left+ size*3,top+8],
@@ -80,13 +84,12 @@ power_frame = [
 
                                 5, 0,
                                 0, 0,
-                                0, 0,
+                                6, 6,
 
                                 3, 3,
                                 4, 4,
 
                                 0, 0,
-
                                 0, 0,
 
                                 4, 3,
@@ -100,43 +103,38 @@ power_frame = [
 # SECOND LEVEL
                                [5, 0,
 
-
                                 5, 0,
+                                1, 2,
+                                6, 6,
+
+                                4, 4,
+
+                                6, 6,
                                 0, 0,
-                                0, 0,
+                                6, 6,
 
-
-
-                                0, 0,
-
-                                0, 0,
-
-
-
-                                2, 3,
                                 7, 7,
+                                5, 5,
                                 7, 7,
 
-                                7, 7],
+                                0,0],
 # BOSS LEVEL
                                [
 
-                                3, 3,
-                                4, 4,
-
+                                0, 0,
                                 0, 0,
 
                                 0, 0,
+                                0, 0,
 
-                                4, 3,
-                                1, 2,
+                                0, 0,
+                                0, 0,
 
-                                3,
-                                7, 7,
-                                7,
+                                0,
+                                0, 0,
+                                0,
 
-                                7, 7],
-
+                                0, 0],
                         ]
 
 brick_strength_frame = [
@@ -154,7 +152,6 @@ brick_strength_frame = [
                                         1, 1,
 
                                         3, 1,
-
                                         2, 1,
 
                                         2, 2,
@@ -171,13 +168,15 @@ brick_strength_frame = [
 
                                        [1, 3,
 
-                                        2, 2,
+                                        4, 4,
                                         2, 3,
-                                        3, 1,
+                                        4, 4,
 
                                         3, 1,
 
-                                        2, 1,
+                                        4, 4,
+                                        4, 4,
+                                        4, 4,
 
 
                                         -1, -2,
@@ -189,12 +188,10 @@ brick_strength_frame = [
 # BOSS LEVEL
 
                                        [
-
                                         0, 0,
                                         0, 0,
 
                                         0, 0,
-
                                         0, 0,
 
                                         0, 0,
