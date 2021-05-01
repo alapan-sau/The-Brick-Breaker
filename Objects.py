@@ -117,7 +117,7 @@ class Ball(Item):
         # WALL COLLISION CONDITIONS
         # left wall
         if(self._pos[0] <= 0 or (self._pos[0]>0 and self._pos[0]+ self._speed[0]<=0 ) ):
-            os.system("afplay ./paddle_ball_audio.wav &")
+            os.system("afplay ./assets/paddle_ball_audio.wav &")
             # set the postion to avoid out of bound
             self._pos[0] = 1
             if(self._speed[0] < 0):
@@ -126,7 +126,7 @@ class Ball(Item):
         # right wall
         if(self._pos[0] +1 >= self._max_size[0]-1   or (self._pos[0] < self._max_size[0]-1 and self._pos[0]+ self._speed[0] >= self._max_size[0]-1) ):
             # set the postion to avoid out of bound
-            os.system("afplay ./paddle_ball_audio.wav &")
+            os.system("afplay ./assets/paddle_ball_audio.wav &")
             self._pos[0] = self._max_size[0]-2
             if(self._speed[0] > 0):
                 self._speed[0] = -self._speed[0]
@@ -135,7 +135,7 @@ class Ball(Item):
         if(self._pos[1] <= 1 or (self._pos[1]>1 and self._pos[1]+ self._speed[1] <=1 )):
             # set the postion to avoid out of bound
 
-            os.system("afplay ./paddle_ball_audio.wav &")
+            os.system("afplay ./assets/paddle_ball_audio.wav &")
             self._pos[1] = 1
             if(self._speed[1]< 0):
                 self._speed[1] = -self._speed[1]
@@ -145,7 +145,7 @@ class Ball(Item):
         if(self._pos[1] >= self._max_size[1]-1):
             # set the postion to avoid out of bound
 
-            os.system("afplay ./paddle_ball_audio.wav &")
+            os.system("afplay ./assets/paddle_ball_audio.wav &")
             self._pos[1] = self._max_size[1]-1
             if(self._speed[1] != 0):
                 self._speed[1] = 0

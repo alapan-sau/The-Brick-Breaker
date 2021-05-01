@@ -95,7 +95,7 @@ class Game:
                 # collision happened!!
 
                 import os
-                os.system("afplay ./paddle_ball_audio.wav &")
+                os.system("afplay ./assets/paddle_ball_audio.wav &")
 
                 ball.paddle_collision(ball_pos[0]-paddle_pos[0] - int(paddle_size[0]/2))
 
@@ -123,7 +123,7 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
-                os.system("afplay ./paddle_ball_audio.wav &")
+                os.system("afplay ./assets/paddle_ball_audio.wav &")
 
 
                 if(self._fireball==1):
@@ -161,7 +161,7 @@ class Game:
                 old_ball_speed[0] = ball_speed[0]
                 old_ball_speed[1] = ball_speed[1]
 
-                os.system("afplay ./paddle_ball_audio.wav &")
+                os.system("afplay ./assets/paddle_ball_audio.wav &")
 
                 if(self._fireball==1):
                     brick.thru_ball_collision(self,old_ball_speed)
@@ -198,7 +198,7 @@ class Game:
             if(ball_pos[1]+1 < brick_pos[1] and ball_pos[1]+1+ball_speed[1] >= brick_pos[1]):
 
 
-                os.system("afplay ./paddle_ball_audio.wav &")
+                os.system("afplay ./assets/paddle_ball_audio.wav &")
 
                 old_ball_speed = np.array([0,0])
                 old_ball_speed[0] = ball_speed[0]
@@ -236,7 +236,7 @@ class Game:
             if(ball_pos[1] >= brick_pos[1]+1 and ball_pos[1]+ball_speed[1] < brick_pos[1]+1):
 
 
-                os.system("afplay ./paddle_ball_audio.wav &")
+                os.system("afplay ./assets/paddle_ball_audio.wav &")
 
                 old_ball_speed = np.array([0,0])
                 old_ball_speed[0] = ball_speed[0]
@@ -503,7 +503,7 @@ class Game:
 
     def explode_neighbour(self, pos, size,speed):
 
-        os.system("afplay ./explosion.mp3 &")
+        os.system("afplay ./assets/explosion.mp3 &")
         for brick in self._bricks:
             brick_pos,brick_size,brick_speed = brick.get_dimension()
 
