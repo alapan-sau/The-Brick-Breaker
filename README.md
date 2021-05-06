@@ -1,14 +1,18 @@
 # The Brick Breaker
-A python built Brick Breaker game to demonstrate the OOPS concept.
+
+<i>A python built Brick Breaker game to demonstrate the OOPS concept</i>.
 
 ## Instruction to Play
+
 ```shell
 $ pip3 install numpy
 $ python3 play.py
 ```
 
+<img src = "game.png">
 
 ## Features of the Game
+
 * The game consists of a ball, paddle and multiple bricks.
 * Bricks of various strenghts are present, each adding points to the score based on the strength on being broken.
 * The position of the paddle decides the deviation of the ball on hitting
@@ -23,10 +27,18 @@ $ python3 play.py
     7) Shoot Laser: It lets the paddle shoot the bricks
     8) Fire Ball : Causes the bricks to explode on hitting by ball
 
-## Controls:
+- Multiple levels with increasing difficulty
 
-<button>s</button> - Release the ball from the paddle <br>
-<button>a</button> - Move the paddle to the left <br>
-<button>d</button> - Move the paddle to the right <br>
-<button>l</button> - Skip Level
-<button>q</button> - Quit the game<br>
+- A Boss Enemy at the game finale!
+
+- Sound Effect to make the game more interactive
+
+## Controls
+
+<kbd>s</kbd> - Release the ball from the paddle <br>
+<kbd>a</kbd> - Move the paddle to the left <br>
+<kbd>d</kbd> - Move the paddle to the right <br>
+<kbd>l</kbd> - Skip Level <br>
+<kbd>q</kbd> - Quit the game<br>
+
+
